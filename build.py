@@ -2,10 +2,14 @@
 """解析《客服接待考核库.md》→ 18题结构化数据 → 注入 index 模板生成成品 index.html。"""
 import re, json, os
 
-SRC = r'G:\AI  biancheng\Obsidian\obsidian\02-淘宝\日常注意\客服接待考核库.md'
+SRC_DIR = r'G:\AI  biancheng\Obsidian\obsidian\02-淘宝\日常注意'
+SRCS = [
+    os.path.join(SRC_DIR, '客服接待考核库.md'),                      # 实战 18 题
+    os.path.join(SRC_DIR, '客服接待考核库-扩展题（红线+缺货话术）.md'),  # 扩展 8 题
+]
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-txt = open(SRC, encoding='utf-8').read()
+txt = '\n'.join(open(s, encoding='utf-8').read() for s in SRCS)
 
 # 店铺脱敏清单（长名优先替换，避免子串问题）
 SHOPS = []
