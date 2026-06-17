@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>客服接待考核系统</title>
+<style>
+  :root{
+    --bg:#f4f6f9; --card:#fff; --ink:#1f2733; --sub:#5b6776; --line:#e6eaf0;
+    --brand:#2f6df6; --brand-d:#1f53cc; --ok:#19a36b; --warn:#e8852b; --bad:#e0483d;
+    --buyer:#fff3e0; --buyerline:#ffd9a8; --staff:#e7f0ff; --staffline:#bcd4ff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.65;-webkit-text-size-adjust:100%}
+  .wrap{max-width:760px;margin:0 auto;padding:16px 14px 60px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:14px;
+    box-shadow:0 1px 3px rgba(20,30,50,.04)}
+  h1{font-size:22px;margin:0 0 6px}
+  h2{font-size:17px;margin:0 0 10px}
+  .muted{color:var(--sub);font-size:14px}
+  .btn{display:inline-block;border:0;border-radius:10px;padding:12px 20px;font-size:16px;font-weight:600;
+    cursor:pointer;background:var(--brand);color:#fff;transition:.15s}
+  .btn:hover{background:var(--brand-d)}
+  .btn:disabled{background:#b9c2d0;cursor:not-allowed}
+  .btn.ghost{background:#eef1f6;color:var(--ink)}
+  .btn.ghost:hover{background:#e2e7ef}
+  .btn.block{display:block;width:100%;text-align:center}
+  input,textarea{font-family:inherit;font-size:15px;width:100%;border:1px solid var(--line);border-radius:10px;
+    padding:10px 12px;background:#fbfcfe;color:var(--ink)}
+  textarea{min-height:120px;resize:vertical}
+  label{display:block;font-weight:600;margin:12px 0 6px;font-size:14px}
+  .tag{display:inline-block;font-size:12px;font-weight:600;padding:3px 9px;border-radius:20px;background:#eef3ff;color:var(--brand);margin-right:6px}
+  .tag.neg{background:#fdeceb;color:var(--bad)}
+  .tag.pos{background:#e8f7ef;color:var(--ok)}
+  /* 进度条 */
+  .pbar{height:7px;background:#e9edf3;border-radius:6px;overflow:hidden;margin:4px 0 14px}
+  .pbar>i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),#54c0ff);transition:.3s}
+  /* 聊天气泡 */
+  .chat{background:#f7f9fc;border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0}
+  .msg{margin:9px 0;display:flex;flex-direction:column}
+  .msg .who{font-size:12px;color:var(--sub);margin-bottom:3px}
+  .msg .bub{display:inline-block;max-width:88%;padding:8px 12px;border-radius:12px;font-size:14.5px;white-space:pre-wrap}
+  .msg.buyer{align-items:flex-start}
+  .msg.buyer .bub{background:var(--buyer);border:1px solid var(--buyerline)}
+  .msg.staff{align-items:flex-end}
+  .msg.staff .bub{background:var(--staff);border:1px solid var(--staffline)}
+  .qask{background:#fff8e8;border:1px solid #ffe3a3;border-radius:10px;padding:11px 13px;margin:12px 0;font-weight:600}
+  /* 解析 */
+  .analysis{background:#f3f8f4;border:1px solid #cfe9d8;border-radius:10px;padding:6px 14px;margin:10px 0;font-size:14.5px}
+  .analysis blockquote{margin:8px 0;padding:8px 12px;background:#fff;border-left:3px solid var(--ok);border-radius:6px;color:#2b4a38}
+  .analysis strong{color:var(--brand-d)}
+  /* 评分项 */
+  .rubric{margin:6px 0}
+  .ritem{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin:7px 0;cursor:pointer;transition:.12s;background:#fff}
+  .ritem:hover{border-color:var(--brand)}
+  .ritem.on{background:#eef6ff;border-color:var(--brand)}
+  .ritem .box{flex:0 0 22px;height:22px;border:2px solid #c2ccda;border-radius:6px;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff}
+  .ritem.on .box{background:var(--brand);border-color:var(--brand)}
+  .ritem .rt{flex:1;font-size:14.5px}
+  .ritem .pt{flex:0 0 auto;font-weight:700;color:var(--brand);font-size:13px;background:#eef3ff;padding:2px 8px;border-radius:20px}
+  .ritem.redline .pt{color:var(--bad);background:#fdeceb}
+  .scoreline{text-align:right;font-weight:700;margin:6px 2px;font-size:15px}
+  /* 结算 */
+  .big{font-size:46px;font-weight:800;line-height:1.1}
+  .grade{font-size:20px;font-weight:800;padding:4px 14px;border-radius:30px;display:inline-block}
+  .g-ex{background:#e8f7ef;color:var(--ok)} .g-good{background:#eef6ff;color:var(--brand)}
+  .g-pass{background:#fff4e3;color:var(--warn)} .g-fail{background:#fdeceb;color:var(--bad)}
+  table{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}
+  th,td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left}
+  th{color:var(--sub);font-weight:600}
+  td.s{text-align:right;font-weight:700}
+  tr.low td{background:#fdf3f2}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .row>*{flex:1}
+  .note{font-size:13px;color:var(--sub);background:#f7f9fc;border:1px dashed var(--line);border-radius:8px;padding:10px;margin-top:10px}
+  .hide{display:none}
+  .center{text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 开始页 -->
+  <section id="start" class="card">
+    <h1>🎧 客服接待考核系统</h1>
+    <p class="muted">用真实售后对话当考题，练判断 · 练话术 · 练守底线。共 <b id="qcount">18</b> 题，每题 10 分，满分 <b id="qmax">180</b>。</p>
+    <div class="note">
+      <b>考核方式：写话术 + 对照自评</b><br>
+      ① 先看真实对话和提问，<b>用自己的话写出你的回复</b>；<br>
+      ② 提交后展示「参考标准应对 + AI 优化话术 + 评分要点」；<br>
+      ③ 对照评分要点<b>逐项自评勾选</b>，系统自动算分；<br>
+      ④ 全部答完出总分和评级，<b>截图发主管</b>即可。<br>
+      <span style="color:var(--bad)">⚠️ 自评要诚实，骗的是自己的成长。</span>
+    </div>
+    <label>你的姓名 *</label>
+    <input id="name" placeholder="请输入姓名" autocomplete="off">
+    <label>工号 / 店铺（选填）</label>
+    <input id="gonghao" placeholder="选填" autocomplete="off">
+    <div style="margin-top:18px"><button class="btn block" onclick="start()">开始考核 →</button></div>
+    <div id="resumeBox" class="hide" style="margin-top:10px">
+      <button class="btn ghost block" onclick="resume()">↩ 继续上次未完成的考核</button>
+    </div>
+  </section>
+
+  <!-- 答题页 -->
+  <section id="exam" class="card hide">
+    <div class="muted" id="progText"></div>
+    <div class="pbar"><i id="progBar"></i></div>
+    <div id="qbody"></div>
+  </section>
+
+  <!-- 结算页 -->
+  <section id="result" class="card hide"></section>
+
+  <p class="center muted" style="margin-top:24px">客服接待考核系统 · 数据源自《客服接待考核库》真实案例 · 店铺已脱敏</p>
+</div>
+
+<script>
+/*__QUESTIONS__*/
+
+const LS='kefu_exam_state';
+let st=null;
+
+function newState(){return{name:'',gonghao:'',cur:0,answers:{},scores:{},checks:{},submitted:{},done:false,ts:Date.now()};}
+function save(){if(st)localStorage.setItem(LS,JSON.stringify(st));}
+function load(){try{return JSON.parse(localStorage.getItem(LS));}catch(e){return null;}}
+
+document.getElementById('qcount').textContent=QUESTIONS.length;
+document.getElementById('qmax').textContent=QUESTIONS.reduce((s,q)=>s+q.maxScore,0);
+window.addEventListener('load',()=>{
+  const prev=load();
+  if(prev&&!prev.done&&Object.keys(prev.answers).length>0){
+    document.getElementById('resumeBox').classList.remove('hide');
+  }
+});
+
+function start(){
+  const name=document.getElementById('name').value.trim();
+  if(!name){alert('请先填写姓名');return;}
+  st=newState();
+  st.name=name;
+  st.gonghao=document.getElementById('gonghao').value.trim();
+  save();
+  show('exam');renderQ();
+}
+function resume(){
+  st=load();
+  if(!st){alert('没有可恢复的进度');return;}
+  show('exam');renderQ();
+}
+function show(id){
+  ['start','exam','result'].forEach(s=>document.getElementById(s).classList.add('hide'));
+  document.getElementById(id).classList.remove('hide');
+  window.scrollTo(0,0);
+}
+
+// 迷你 markdown → html
+function md(t){
+  if(!t)return'';
+  let lines=t.split('\n'),html='',inList=false;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const inline=s=>esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  for(let raw of lines){
+    let l=raw.trim();
+    if(!l){if(inList){html+='</ul>';inList=false;}continue;}
+    if(l.startsWith('&gt;')||l.startsWith('>')){
+      l=l.replace(/^(&gt;|>)\s?/,'');
+      if(inList){html+='</ul>';inList=false;}
+      html+='<blockquote>'+inline(l)+'</blockquote>';
+    }else if(l.startsWith('- ')){
+      if(!inList){html+='<ul>';inList=true;}
+      html+='<li>'+inline(l.slice(2))+'</li>';
+    }else{
+      if(inList){html+='</ul>';inList=false;}
+      html+='<p>'+inline(l)+'</p>';
+    }
+  }
+  if(inList)html+='</ul>';
+  return html;
+}
+
+function roleOf(line){
+  // 取「：」前的说话人判断角色
+  const head=line.split('：')[0]||'';
+  if(head.indexOf('客服')>=0)return'staff';
+  if(head.indexOf('买家')>=0)return'buyer';
+  return head.indexOf('店铺')>=0?'staff':'buyer';
+}
+function speaker(line){return (line.split('：')[0]||'').replace(/（.*?）/g,'').trim();}
+function content(line){const i=line.indexOf('：');return i<0?line:line.slice(i+1);}
+function fmtBub(s){return escapeHtml(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');}
+
+function renderQ(){
+  const i=st.cur, q=QUESTIONS[i], n=QUESTIONS.length;
+  document.getElementById('progText').textContent=`第 ${i+1} / ${n} 题　·　${st.name}`;
+  document.getElementById('progBar').style.width=((i)/n*100)+'%';
+  const submitted=!!st.submitted[i];
+
+  let chat='';
+  q.dialogue.forEach(line=>{
+    const r=roleOf(line);
+    chat+=`<div class="msg ${r}"><span class="who">${escapeHtml(speaker(line))}</span><span class="bub">${fmtBub(content(line))}</span></div>`;
+  });
+
+  let html=`
+    <span class="tag">${escapeHtml(q.category)}</span>
+    <span class="tag ${q.caseType==='反面'?'neg':'pos'}">${q.caseType||''}案例</span>
+    <h2>${escapeHtml(q.title)}</h2>
+    <div class="chat">${chat}</div>
+    <div class="qask">❓ ${escapeHtml(q.question)}</div>
+    <label>✍️ 你的回复（用自己的话写出怎么应对）</label>
+    <textarea id="ans" placeholder="在这里写下你会怎么回复买家...">${st.answers[i]?escapeHtml(st.answers[i]):''}</textarea>
+  `;
+
+  if(!submitted){
+    html+=`<div style="margin-top:14px"><button class="btn block" onclick="submitAns()">提交并查看参考答案 ↓</button></div>`;
+  }else{
+    html+=`
+      <div class="analysis"><div style="font-weight:700;color:var(--ok);margin:8px 0">✅ 参考解析（标准应对 + AI 优化）</div>${md(q.analysis)}</div>
+      <h2 style="margin-top:18px">📊 对照评分要点，诚实自评</h2>
+      <p class="muted">你的回复做到了哪几条？点击勾选，做到才得分。</p>
+      <div class="rubric" id="rubric">${q.rubric.map((r,ri)=>{
+        const on=st.checks[i]&&st.checks[i][ri];
+        return `<div class="ritem ${on?'on':''} ${r.redline?'redline':''}" onclick="toggle(${ri})">
+          <div class="box">${on?'✓':''}</div>
+          <div class="rt">${escapeHtml(r.desc)}${r.redline?' <span style="color:var(--bad)">·红线项</span>':''}</div>
+          <div class="pt">${r.points}分</div></div>`;
+      }).join('')}</div>
+      <div class="scoreline">本题得分：<span id="qscore">${calcQ(i)}</span> / ${q.maxScore}</div>
+      <div class="row" style="margin-top:14px">
+        ${i>0?'<button class="btn ghost" onclick="prev()">← 上一题</button>':''}
+        <button class="btn" onclick="next()">${i===n-1?'交卷看成绩 🏁':'下一题 →'}</button>
+      </div>
+    `;
+  }
+  document.getElementById('qbody').innerHTML=html;
+  const ta=document.getElementById('ans');
+  if(ta)ta.addEventListener('input',e=>{st.answers[i]=e.target.value;save();});
+}
+
+function submitAns(){
+  const ta=document.getElementById('ans');
+  if(!ta.value.trim()){if(!confirm('还没写回复，确定直接看答案吗？（建议先写再看）'))return;}
+  st.answers[st.cur]=ta.value;
+  st.submitted[st.cur]=true;
+  if(!st.checks[st.cur])st.checks[st.cur]={};
+  save();renderQ();
+}
+function toggle(ri){
+  const i=st.cur;
+  if(!st.checks[i])st.checks[i]={};
+  st.checks[i][ri]=!st.checks[i][ri];
+  st.scores[i]=calcQ(i);
+  save();
+  document.querySelectorAll('#rubric .ritem')[ri].classList.toggle('on');
+  document.querySelectorAll('#rubric .ritem')[ri].querySelector('.box').textContent=st.checks[i][ri]?'✓':'';
+  document.getElementById('qscore').textContent=calcQ(i);
+}
+function calcQ(i){
+  const q=QUESTIONS[i];let s=0;
+  if(st.checks[i])q.rubric.forEach((r,ri)=>{if(st.checks[i][ri])s+=r.points;});
+  return s;
+}
+function prev(){if(st.cur>0){st.cur--;save();renderQ();}}
+function next(){
+  st.scores[st.cur]=calcQ(st.cur);
+  if(st.cur<QUESTIONS.length-1){st.cur++;save();renderQ();}
+  else{finish();}
+}
+
+function finish(){
+  st.done=true;
+  QUESTIONS.forEach((q,i)=>{st.scores[i]=calcQ(i);});
+  save();
+  const total=QUESTIONS.reduce((s,q,i)=>s+(st.scores[i]||0),0);
+  const max=QUESTIONS.reduce((s,q)=>s+q.maxScore,0);
+  const pct=Math.round(total/max*100);
+  let grade,cls;
+  if(pct>=90){grade='优秀 🏆';cls='g-ex';}
+  else if(pct>=75){grade='良好 👍';cls='g-good';}
+  else if(pct>=60){grade='合格 ✔';cls='g-pass';}
+  else{grade='不合格 ❌';cls='g-fail';}
+
+  let rows='';
+  QUESTIONS.forEach((q,i)=>{
+    const sc=st.scores[i]||0;
+    rows+=`<tr class="${sc<q.maxScore*0.6?'low':''}"><td>${i+1}. ${escapeHtml(q.category)}</td><td class="s">${sc}/${q.maxScore}</td></tr>`;
+  });
+  const weak=QUESTIONS.map((q,i)=>({q,i,sc:st.scores[i]||0})).filter(x=>x.sc<x.q.maxScore*0.6);
+
+  const dt=new Date();
+  const dstr=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')} ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+
+  document.getElementById('result').innerHTML=`
+    <div class="center">
+      <p class="muted" style="margin:0">${escapeHtml(st.name)}${st.gonghao?' · '+escapeHtml(st.gonghao):''} 的考核成绩</p>
+      <div class="big">${total}<span style="font-size:22px;color:var(--sub)"> / ${max}</span></div>
+      <div style="margin:6px 0 4px"><span class="grade ${cls}">${grade}</span></div>
+      <p class="muted">得分率 ${pct}%　·　${dstr}</p>
+    </div>
+    <div class="note">⚠️ 注意：触碰<b>致命红线</b>（泄露内部把柄 / 与买家对骂 / 钱货两空）在真实考核中是<b>一票否决判 0 分</b>。本系统为自评，红线项请务必如实勾选。</div>
+    <h2 style="margin-top:16px">各题得分</h2>
+    <table><tr><th>题目</th><th class="s">得分</th></tr>${rows}</table>
+    ${weak.length?`<h2 style="margin-top:16px">⚠️ 薄弱题（建议重做）</h2><ul>${weak.map(x=>`<li>第${x.i+1}题 ${escapeHtml(x.q.category)} — ${escapeHtml(x.q.title)}（${x.sc}/${x.q.maxScore}）</li>`).join('')}</ul>`:'<p style="color:var(--ok);font-weight:600;margin-top:14px">🎉 没有薄弱题，守损意识到位！</p>'}
+    <div class="row" style="margin-top:18px">
+      <button class="btn" onclick="copyReport(${total},${max},${pct},'${grade}','${dstr}')">📋 复制成绩单发主管</button>
+      <button class="btn ghost" onclick="review()">📖 回看错题</button>
+    </div>
+    <div style="margin-top:10px"><button class="btn ghost block" onclick="restart()">重新考核</button></div>
+  `;
+  document.getElementById('progBar').style.width='100%';
+  show('result');
+}
+
+function copyReport(total,max,pct,grade,dstr){
+  let t=`【客服接待考核成绩】\n姓名：${st.name}${st.gonghao?'\n工号/店铺：'+st.gonghao:''}\n时间：${dstr}\n总分：${total}/${max}（${pct}%）\n评级：${grade}\n\n各题得分：\n`;
+  QUESTIONS.forEach((q,i)=>{t+=`${i+1}. ${q.category} ${st.scores[i]||0}/${q.maxScore}\n`;});
+  const weak=QUESTIONS.map((q,i)=>({q,i,sc:st.scores[i]||0})).filter(x=>x.sc<x.q.maxScore*0.6);
+  if(weak.length)t+=`\n薄弱题：${weak.map(x=>'第'+(x.i+1)+'题').join('、')}`;
+  navigator.clipboard.writeText(t).then(()=>alert('成绩单已复制，粘贴发给主管即可！')).catch(()=>{
+    prompt('复制下面文本发给主管：',t);
+  });
+}
+function review(){st.cur=0;st.done=false;
+  // 跳到第一道薄弱题，没有则第一题
+  const weak=QUESTIONS.findIndex((q,i)=>(st.scores[i]||0)<q.maxScore*0.6);
+  st.cur=weak>=0?weak:0;save();show('exam');renderQ();}
+function restart(){if(confirm('确定重新开始？当前成绩会清空。')){localStorage.removeItem(LS);location.reload();}}
+
+function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+</script>
+</body>
+</html>

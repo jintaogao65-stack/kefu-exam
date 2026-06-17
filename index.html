@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>客服接待考核系统</title>
+<style>
+  :root{
+    --bg:#f4f6f9; --card:#fff; --ink:#1f2733; --sub:#5b6776; --line:#e6eaf0;
+    --brand:#2f6df6; --brand-d:#1f53cc; --ok:#19a36b; --warn:#e8852b; --bad:#e0483d;
+    --buyer:#fff3e0; --buyerline:#ffd9a8; --staff:#e7f0ff; --staffline:#bcd4ff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.65;-webkit-text-size-adjust:100%}
+  .wrap{max-width:760px;margin:0 auto;padding:16px 14px 60px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:14px;
+    box-shadow:0 1px 3px rgba(20,30,50,.04)}
+  h1{font-size:22px;margin:0 0 6px}
+  h2{font-size:17px;margin:0 0 10px}
+  .muted{color:var(--sub);font-size:14px}
+  .btn{display:inline-block;border:0;border-radius:10px;padding:12px 20px;font-size:16px;font-weight:600;
+    cursor:pointer;background:var(--brand);color:#fff;transition:.15s}
+  .btn:hover{background:var(--brand-d)}
+  .btn:disabled{background:#b9c2d0;cursor:not-allowed}
+  .btn.ghost{background:#eef1f6;color:var(--ink)}
+  .btn.ghost:hover{background:#e2e7ef}
+  .btn.block{display:block;width:100%;text-align:center}
+  input,textarea{font-family:inherit;font-size:15px;width:100%;border:1px solid var(--line);border-radius:10px;
+    padding:10px 12px;background:#fbfcfe;color:var(--ink)}
+  textarea{min-height:120px;resize:vertical}
+  label{display:block;font-weight:600;margin:12px 0 6px;font-size:14px}
+  .tag{display:inline-block;font-size:12px;font-weight:600;padding:3px 9px;border-radius:20px;background:#eef3ff;color:var(--brand);margin-right:6px}
+  .tag.neg{background:#fdeceb;color:var(--bad)}
+  .tag.pos{background:#e8f7ef;color:var(--ok)}
+  /* 进度条 */
+  .pbar{height:7px;background:#e9edf3;border-radius:6px;overflow:hidden;margin:4px 0 14px}
+  .pbar>i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),#54c0ff);transition:.3s}
+  /* 聊天气泡 */
+  .chat{background:#f7f9fc;border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0}
+  .msg{margin:9px 0;display:flex;flex-direction:column}
+  .msg .who{font-size:12px;color:var(--sub);margin-bottom:3px}
+  .msg .bub{display:inline-block;max-width:88%;padding:8px 12px;border-radius:12px;font-size:14.5px;white-space:pre-wrap}
+  .msg.buyer{align-items:flex-start}
+  .msg.buyer .bub{background:var(--buyer);border:1px solid var(--buyerline)}
+  .msg.staff{align-items:flex-end}
+  .msg.staff .bub{background:var(--staff);border:1px solid var(--staffline)}
+  .qask{background:#fff8e8;border:1px solid #ffe3a3;border-radius:10px;padding:11px 13px;margin:12px 0;font-weight:600}
+  /* 解析 */
+  .analysis{background:#f3f8f4;border:1px solid #cfe9d8;border-radius:10px;padding:6px 14px;margin:10px 0;font-size:14.5px}
+  .analysis blockquote{margin:8px 0;padding:8px 12px;background:#fff;border-left:3px solid var(--ok);border-radius:6px;color:#2b4a38}
+  .analysis strong{color:var(--brand-d)}
+  /* 评分项 */
+  .rubric{margin:6px 0}
+  .ritem{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin:7px 0;cursor:pointer;transition:.12s;background:#fff}
+  .ritem:hover{border-color:var(--brand)}
+  .ritem.on{background:#eef6ff;border-color:var(--brand)}
+  .ritem .box{flex:0 0 22px;height:22px;border:2px solid #c2ccda;border-radius:6px;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff}
+  .ritem.on .box{background:var(--brand);border-color:var(--brand)}
+  .ritem .rt{flex:1;font-size:14.5px}
+  .ritem .pt{flex:0 0 auto;font-weight:700;color:var(--brand);font-size:13px;background:#eef3ff;padding:2px 8px;border-radius:20px}
+  .ritem.redline .pt{color:var(--bad);background:#fdeceb}
+  .scoreline{text-align:right;font-weight:700;margin:6px 2px;font-size:15px}
+  /* 结算 */
+  .big{font-size:46px;font-weight:800;line-height:1.1}
+  .grade{font-size:20px;font-weight:800;padding:4px 14px;border-radius:30px;display:inline-block}
+  .g-ex{background:#e8f7ef;color:var(--ok)} .g-good{background:#eef6ff;color:var(--brand)}
+  .g-pass{background:#fff4e3;color:var(--warn)} .g-fail{background:#fdeceb;color:var(--bad)}
+  table{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}
+  th,td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left}
+  th{color:var(--sub);font-weight:600}
+  td.s{text-align:right;font-weight:700}
+  tr.low td{background:#fdf3f2}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .row>*{flex:1}
+  .note{font-size:13px;color:var(--sub);background:#f7f9fc;border:1px dashed var(--line);border-radius:8px;padding:10px;margin-top:10px}
+  .hide{display:none}
+  .center{text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 开始页 -->
+  <section id="start" class="card">
+    <h1>🎧 客服接待考核系统</h1>
+    <p class="muted">用真实售后对话当考题，练判断 · 练话术 · 练守底线。共 <b id="qcount">18</b> 题，每题 10 分，满分 <b id="qmax">180</b>。</p>
+    <div class="note">
+      <b>考核方式：写话术 + 对照自评</b><br>
+      ① 先看真实对话和提问，<b>用自己的话写出你的回复</b>；<br>
+      ② 提交后展示「参考标准应对 + AI 优化话术 + 评分要点」；<br>
+      ③ 对照评分要点<b>逐项自评勾选</b>，系统自动算分；<br>
+      ④ 全部答完出总分和评级，<b>截图发主管</b>即可。<br>
+      <span style="color:var(--bad)">⚠️ 自评要诚实，骗的是自己的成长。</span>
+    </div>
+    <label>你的姓名 *</label>
+    <input id="name" placeholder="请输入姓名" autocomplete="off">
+    <label>工号 / 店铺（选填）</label>
+    <input id="gonghao" placeholder="选填" autocomplete="off">
+    <div style="margin-top:18px"><button class="btn block" onclick="start()">开始考核 →</button></div>
+    <div id="resumeBox" class="hide" style="margin-top:10px">
+      <button class="btn ghost block" onclick="resume()">↩ 继续上次未完成的考核</button>
+    </div>
+  </section>
+
+  <!-- 答题页 -->
+  <section id="exam" class="card hide">
+    <div class="muted" id="progText"></div>
+    <div class="pbar"><i id="progBar"></i></div>
+    <div id="qbody"></div>
+  </section>
+
+  <!-- 结算页 -->
+  <section id="result" class="card hide"></section>
+
+  <p class="center muted" style="margin-top:24px">客服接待考核系统 · 数据源自《客服接待考核库》真实案例 · 店铺已脱敏</p>
+</div>
+
+<script>
+const QUESTIONS = [{"num": 1, "category": "发错货/缺货", "title": "买家收到小苏打，要求仅退款不退货", "caseType": "反面", "dialogue": ["买家 杜豪伟0412：「为什么送过来的东西是小苏打？？？」", "客服 坤晓：「亲，实在是抱歉，仓库因为过年，这几天发的货比较多，给您发错了，实在是抱歉，这边给您**顺丰补发**，仓库出单号后，我把单号发给您，您看可以吗」", "买家：「东西错的太离谱了」「退款吧」", "客服 坤晓：「好的，亲，您申请**仅退款**」「给您发过去的产品不用退了哦，这边直接给您仅退款了」"], "question": "买家收到的货完全不对，张口就要退款，你会怎么回？", "analysis": "**❌ 错误应对**（本案例）\n客服先提了补发（方向对），但买家一说\"退款\"立刻软掉，最后落到**\"产品不用退了 + 直接仅退款\"** —— 这是典型的**钱货两空**：错发的货留在买家手里，钱也全退了。即便是己方发错，也应**先收回错发的货**或要求买家寄回（运费商家承担），再退款，而不是货款双送。\n\n**✅ 标准应对**（参考本店订单 3225773175196597873）\n- 莉莉：「非常抱歉，亲亲，可能是仓库那边发错了」→「这边给您**仅退款或者给您重新补发**，您看可以吗」\n- 为什么对：**先给\"补发\"选项**（留住这单交易、不退钱），把\"退款\"作为兜底；态度到位但没有主动放弃收回货物。发错货的第一选择永远是补发，不是退钱。\n\n**💡 AI 优化建议**（把\"补发优先\"和\"退款也要召回错件\"固化成二选一句式）\n> 「太抱歉了亲，确实是我们仓库发错。两个方案您选：① **顺丰加急给您补发正确的，错的那盒我叫快递上门取回、运费我们出**，您不用动；② 实在不想要了，也要**先把错发的退回来（运费我们承担）**，收到后马上退款。给您添麻烦，额外补您 X 元。」\n> → 比原话更进一步：员工照背即可，从根上堵死\"货不用退+全退\"的钱货两空。", "rubric": [{"desc": "是否第一时间道歉+安抚情绪", "points": 2, "redline": false}, {"desc": "是否**优先给补发选项**而非直接退款", "points": 3, "redline": false}, {"desc": "是否避免\"货不用退+全退款\"的钱货两空", "points": 3, "redline": false}, {"desc": "话术是否专业、不甩锅给仓库太露骨", "points": 2, "redline": false}], "maxScore": 10}, {"num": 2, "category": "发错货/缺货", "title": "缺货了，客服直接让买家仅退款", "caseType": "反面", "dialogue": ["客服 奇奇：「外包装打开了看到里面不一样」「给您发错了」「您看您这边需要退款吗」", "买家：「我要的是止痒的」「不是涂脸的」", "客服：「那这边给您退一下吧 您再重新拍」「你申请一下退货退款」", "（次日买家重新下单后）客服：「亲 现在这款产品**仓库没货了** 您申请一下退款吧亲」"], "question": "发错货+重拍后又缺货，你怎么处理才不至于又退又流失客户？", "analysis": "**❌ 错误应对**（本案例）\n两个问题叠加：① 发错货时直接问\"需要退款吗\"，主动把客户往退款引导；② 重拍后缺货又是\"申请退款吧\"。**缺货直接全退**是常见坑——既丢了销售额，又给了客户一次\"这家老缺货/老发错\"的差体验。应先确认仓库到货时间、给补发预期，实在无货再退，并争取小额补偿安抚换留客。\n\n**💡 AI 优化建议**（缺货挽留三连，详见 [[缺货标准话术卡]]）\n> 「这款补货中，**预计 X 天到，到了我盯着帮您优先发**；要是不想等，这边**补您 X 元留着用**也行。实在要退我马上给您办，不耽误。」\n> → 把\"申请退款吧\"换成\"等货+补偿\"先行、退款兜底，既保销售额又留客。", "rubric": [{"desc": "发错货时是否避免主动引导退款", "points": 3, "redline": false}, {"desc": "缺货是否先争取\"等到货补发\"而非直接退", "points": 3, "redline": false}, {"desc": "是否做了留客动作（补偿/后续提醒）", "points": 2, "redline": false}, {"desc": "整体是否减少了销售流失", "points": 2, "redline": false}], "maxScore": 10}, {"num": 3, "category": "发错货", "title": "己方失误超发一瓶，如何要回多发的货", "caseType": "优秀", "dialogue": ["客服 莉莉：「亲，非常抱歉跟您说个情况。您之前退的那瓶沐浴油，我们已经给您**全额退款**了，本来想拦截快递，结果没拦截成功，两瓶都送到您那边了。是我们这边物流操作失误……麻烦您方便的时候，帮忙把多出来的那一瓶**未拆封的退回**给我们，**运费我们全部承担**，我直接给您叫上门取件，您不用花一分钱。这边再给您**额外补偿十元**您看可以吗？」"], "question": "是己方失误多发了货，主动权在买家手里，你怎么把货要回来？", "analysis": "**✅ 标准应对**（本案例）\n- 为什么对：① **主动坦诚**说明己方失误，不遮掩；② 明确\"未拆封退回\"边界；③ **运费全包 + 上门取件**降低买家行动成本；④ **额外补偿10元**给足台阶。这是\"我有错在先时如何体面追回损失\"的范本——靠补偿和便利换回货物，而不是质问买家。\n\n**💡 AI 优化建议**（已是范本，再加\"零垫付\"话术降拖延）\n> 在原话基础上补一句：「您**收到取件短信直接把货交给快递就行，全程不用您垫一分钱**，取件成功补偿的 10 元当天到账。」\n> → 把\"运费全包\"再具体到\"零垫付+当天到账\"，进一步降低买家拖延/拒绝概率。", "rubric": [{"desc": "是否坦诚说明失误、姿态低", "points": 2, "redline": false}, {"desc": "是否明确\"未拆封退回\"的边界", "points": 2, "redline": false}, {"desc": "是否用\"运费全包+上门取件\"降低买家阻力", "points": 3, "redline": false}, {"desc": "是否用小额补偿换配合", "points": 3, "redline": false}], "maxScore": 10}, {"num": 4, "category": "拆封/已使用要退货", "title": "用了一天脸过敏，要退已拆正装", "caseType": "优秀", "dialogue": ["买家 yk我为人人：「你好，昨天打开正装用了一天，脸过敏了是什么情况啊」", "客服 小军：「您拍照看一下」", "（买家发起退货后）客服 小军：「发起协商：退货商品异常，联系商家客服」「退货产品**已经拆封使用过了，影响二次销售的不支持退货退款**」"], "question": "买家说用了过敏要退，且正装已拆封用过一天，你怎么回？", "analysis": "**✅ 标准应对**（本案例）\n- 为什么对：① 先\"拍照看一下\"**留证**，了解实际情况；② 拆封使用→**硬依据拒退**：\"已拆封使用过，影响二次销售，不支持退货退款\"。依据清晰、不含糊，没有被\"过敏\"这个情绪点唬住而软退。\n\n**💡 AI 优化建议**（守硬依据 + 给软着陆，降差评）\n> 「您先拍张照我看下情况哈。不过这款是上脸/入口的，**拆封用过就影响二次销售、没法退**——这是平台规则也是为了下一位顾客卫生。要是用着不适，这边**送您一支舒缓小样 / 补您 X 元**，您看行吗？」\n> → 原话守住硬依据，AI 版本补\"卫生角度+小额补偿\"软着陆，减少差评和平台介入。", "rubric": [{"desc": "是否先要照片留证", "points": 3, "redline": false}, {"desc": "是否引用\"拆封影响二次销售\"硬依据", "points": 3, "redline": false}, {"desc": "是否未被\"过敏\"情绪话术带偏", "points": 2, "redline": false}, {"desc": "话术是否冷静专业、不激化", "points": 2, "redline": false}], "maxScore": 10}, {"num": 5, "category": "拆封/已使用要退货", "title": "自身原因（喝不下）要退，如何降为部分退", "caseType": "优秀", "dialogue": ["买家 eggyboyyy：「如果太甜，我能退5瓶吗」「她真的喝不下」", "客服 坤晓：「可以的亲」", "买家：「抱歉，我能退余下的5瓶吗」", "客服 坤晓：「好的亲」「退款金额改一下呢」「申请理由不想要了」", "买家：「其实我比任何人都希望能不退货」「谢谢你们」"], "question": "病人喝不下（自身原因），买家情绪温和想退货，你怎么处理既留情面又控损失？", "analysis": "**✅ 标准应对**（本案例）\n- 为什么对：① 面对温和、可沟通的买家，**只退未喝的5瓶（部分退）**，已喝部分不退，把损失控制在最小；② 全程态度温暖，最后买家反而说\"谢谢你们\"——既守住了部分货款，又拿到了好口碑。这是\"全退降为部分退\"的标准操作。\n\n**💡 AI 优化建议**（部分退讲成\"为您着想别浪费\"）\n> 「完全理解亲，老人喝不下确实没办法。这样，**没开封的 5 瓶给您退**，开过的就留着试试别浪费；退款理由选'不想要了'，金额我帮您改好。」\n> → 把\"部分退\"包装成\"替您省、别浪费\"，守住货款同时更暖心，复购率更高。", "rubric": [{"desc": "是否把\"全退\"谈成\"部分退/退未拆部分\"", "points": 4, "redline": false}, {"desc": "是否守住已使用部分不退", "points": 2, "redline": false}, {"desc": "情绪安抚、维护关系是否到位", "points": 2, "redline": false}, {"desc": "是否引导正确的退款金额和理由", "points": 2, "redline": false}], "maxScore": 10}, {"num": 6, "category": "拆封/已使用要退货", "title": "已拆一条，剩余可退如何按盒抵扣", "caseType": "优秀", "dialogue": ["买家 yaoligui1230：「这个和我买的都不一样」「要退货」「拆了一条」「剩下两条可以退吗」", "客服 坤晓：「盒子没有拆用过吧亲」→「原装的是不」→「**抵扣掉一盒就行**呢亲」", "后续核对申请金额：「您申请了135」「申请金额错了」「应该是退125的」"], "question": "买家拆了一条要退，剩下的没拆，你怎么算退款金额？", "analysis": "**✅ 标准应对**（本案例）\n- 为什么对：① 先确认\"剩下的是否原装未拆\"；② **拆掉的那一盒/条做抵扣，只退未拆部分**；③ 还主动核对了买家申请金额\"申请多了，应退125不是135\"——**帮店里把多退的钱纠回来**。控损意识极强。\n\n**💡 AI 优化建议**（客服主动报准确金额，省得来回核对）\n> 「您拆了 1 盒、还剩 2 盒原装未拆对吧？那这 2 盒给您退，**金额我帮您算好是 125**，您按这个申请、理由选'不想要了'就行。」\n> → 原话是被动纠错（买家申请多了再改），AI 版本**客服主动报准确可退金额**，避免多退也更显专业。", "rubric": [{"desc": "是否区分已拆/未拆分别计价", "points": 3, "redline": false}, {"desc": "是否对已拆部分做抵扣", "points": 3, "redline": false}, {"desc": "是否核对买家申请金额防止多退", "points": 3, "redline": false}, {"desc": "沟通是否清晰", "points": 1, "redline": false}], "maxScore": 10}, {"num": 7, "category": "拆封/已使用要退货", "title": "吃了4盒没效果要退6盒", "caseType": "反面", "dialogue": ["买家 liu1437063208：「我要退货」「退两盒」「吃了你4盒了都没有什么效果」「有两盒没有拆」", "客服 凯凯：「亲，您拆封了吗?」→「好的，亲」→「亲，您申请退货退款，金额修改为216，这边给您处理退货退款哦」"], "question": "买家吃了4盒说没效果，剩2盒未拆要退货，你退多少？这里有什么坑？", "analysis": "**❌ 错误应对**（本案例）\n客服问了\"拆封了吗\"（方向对），但买家明明说\"吃了4盒、剩2盒未拆\"，结果客服的退款金额谈到了 **216 元**——这个金额对照\"只退2盒未拆\"明显偏高，等于把已吃的4盒（自身原因+已拆封）也部分退了。**自身原因+已拆封仍退**是典型坑。正确做法：只退2盒未拆的钱，已吃的4盒一分不退。\n\n**✅ 对照标准**：见考核题6，\"拆掉的抵扣、只退未拆\"。\n\n**💡 AI 优化建议**（这单本该这样说）\n> 「亲，您吃过的 4 盒已经拆封使用了，**这部分没办法退**哦；没拆的 2 盒可以退，金额是 XX。效果方面这类需要按疗程坚持，您这 2 盒要不留着用完看看？」\n> → 把反面里\"金额谈到 216\"纠正为\"只退未拆 2 盒\"，并补一句留单尝试。", "rubric": [{"desc": "是否识别\"已吃4盒=自身原因+已拆封，不退\"", "points": 4, "redline": false}, {"desc": "是否只退未拆的2盒", "points": 3, "redline": false}, {"desc": "退款金额是否核算正确、不偏高", "points": 3, "redline": false}], "maxScore": 10}, {"num": 8, "category": "七天无理由", "title": "买错了要退，质问为什么要自付运费", "caseType": "优秀", "dialogue": ["买家 刘其峰111：「我这个买错了可以退吗」「没拆」「只拆了快递盒子」", "客服 坤晓：「您拆封使用了吗？」→「您申请退货退款」", "买家：「退回运费要我自己承担吗」「没有运费险吗」「写着7天无理由退换啊」「7天无理由退货为何让我付运费」「那我还没用就要付10%的费用吗」", "客服 坤晓：「没有的哈，我们卖的这个价格都是薄利多销的」「**那个是七天无理由退货，跟运费险是没有关联的哈**」「运费需要您自己承担哈，拆封后不支持退换货，未拆封可以退货」"], "question": "买家拿\"7天无理由\"反复质问\"凭什么我付运费\"，你怎么稳住？", "analysis": "**✅ 标准应对**（本案例）\n- 为什么对：① 先确认\"未拆封\"→可退；② 对\"7天无理由=免运费\"的误解**反复用同一依据澄清**——\"七天无理由跟运费险没关联，无运费险，运费买家自担\"；③ 不被\"写着7天无理由啊\"的话术带偏，立场始终一致。守住了\"运费不由商家承担\"这条线。\n\n**💡 AI 优化建议**（守线之外降阻力）\n> 在\"7天无理由≠免运费\"讲清后补：「您要是退，**用咱们这个寄件口下单运费更便宜**，把没拆的原样寄回就行，**收到当天给您退款**。」\n> → 原话立场稳，AI 版本加\"省运费的寄法+当天退款\"，减少买家在运费上的反复拉锯。", "rubric": [{"desc": "是否先确认未拆封再答应退货", "points": 2, "redline": false}, {"desc": "是否讲清\"7天无理由≠免运费\"", "points": 3, "redline": false}, {"desc": "是否在买家反复质问下立场不动摇", "points": 3, "redline": false}, {"desc": "是否引导\"上门取件运费更优惠\"等降阻力话术", "points": 2, "redline": false}], "maxScore": 10}, {"num": 9, "category": "七天无理由", "title": "春节期间能不能退、有没有运费险", "caseType": "反面", "dialogue": ["买家 tb281502125：「这个连接怎么有两种药」", "客服 燕燕：「您下单的就是这一款呀，亲亲」→「那您不想要就申请退货退款吧」", "买家：「现在春节期间能退吗」「年后是什么时候才可以退」「那初八之后退有运险吗」「不是有7天无理由吗」", "客服 燕燕：「咱家没有运险的，亲亲」「是的，无理由要自己承担运费的亲」"], "question": "买家其实是\"看错款式想退\"（自身原因），还一直问运费险，你怎么处理？", "analysis": "**❌ 错误应对/可改进点**（本案例）\n客服坚持了\"无运费险、无理由自担运费\"这条线（这部分对），但**太快说出\"那您不想要就申请退货退款吧\"**——买家本质是看错款式（自身原因），客服没有先尝试解释款式、留住这单，而是直接把客户推向退货。属于\"轻易放走订单\"。可先解释\"连接就是这一款、款式没发错\"，争取留单，再谈退货条件。\n\n**💡 AI 优化建议**（先解释留单，别急着推退货）\n> 「亲，这个链接就是这一款哦，**没有发错款**，您当时拍的就是它～您是担心哪一点？我帮您看看是不是适合，真不需要咱再说退的事。」\n> → 反面里客服太快说\"那就退吧\"，AI 版本**先确认需求争取留单**，留不住再谈退货条件。", "rubric": [{"desc": "是否先解释清楚、尝试留单", "points": 3, "redline": false}, {"desc": "是否守住\"无运费险、运费自担\"", "points": 3, "redline": false}, {"desc": "是否避免过早主动引导退货", "points": 2, "redline": false}, {"desc": "话术是否清晰", "points": 2, "redline": false}], "maxScore": 10}, {"num": 10, "category": "假货/刮码质疑", "title": "刮码被指\"无法验真、要求退货退款+商家承担运费\"", "caseType": "优秀", "dialogue": ["买家 tb64158376：「为什么要刮码」「没有防伪码我们也不能验证是否正品啊」", "客服 珂珂：「咱都是刮码发货的亲」「品牌方不让低价销售」「这样品牌方就不知道是从我们这里发出的」「咱家只销售正品亲」", "买家：「这是咱这边的责任吧，你们是不是应该承担运费啊」「防伪码被刮毁，属于无法验真的商品……我有权要求退货退款，运费由你们承担」", "客服 珂珂：「只有产品有问题我们才承担运费」「不需要可以申请退货退款」「**要有证据证明我们是假货**」"], "question": "买家拿\"刮码=无法验真=可能假货\"成套话术施压，还要你承担运费，你怎么扛？", "analysis": "**✅ 标准应对**（本案例）\n- 为什么对：① 把刮码解释成**品牌方控价的正常操作**，不是心虚；② 守住\"只有产品有问题我们才承担运费\"，**不接\"你刮码就该你付运费\"的逻辑**；③ 关键一句**\"要有证据证明我们是假货\"——举证责任倒置**，把\"证明假货\"的责任甩回买家。整段没有被成套话术唬住。\n\n**💡 AI 优化建议**（举证倒置升级 + 防自曝）\n> 「刮码是**品牌方统一控价的正常操作，所有货都这样、保证正品**；只有产品本身有质量问题我们才承担运费。您要是认为有问题，**可以送检，凭检测报告我们全额赔付。**」\n> → 把\"要证据\"升级成\"送检凭报告赔付\"（更硬气、更显底气）；⚠️ **绝不说\"刮码被查/会罚款/取消代理\"**，那是自曝把柄（见 [[防泄露内部把柄红线清单]]）。", "rubric": [{"desc": "是否把刮码解释成品牌控价的正常操作", "points": 2, "redline": false}, {"desc": "是否守住\"产品有问题才承担运费\"", "points": 3, "redline": false}, {"desc": "是否做了\"举证责任倒置\"（要求买家拿证据）", "points": 3, "redline": false}, {"desc": "是否全程冷静不慌", "points": 2, "redline": false}], "maxScore": 10}, {"num": 11, "category": "假货/刮码质疑", "title": "买家纠缠\"里面被拆过、码刮了\"要退货补运费", "caseType": "优秀", "dialogue": ["买家 tb512863554：「收到了，都没有塑封呢，都明显被打开过」「外面的盒子刮码就可以，里面的怎么也刮呢」「要求退货」「补运费」", "客服 琳琳：「刮码刮的是外包装」「这是代理统一刮的，所有都是这样」「如果最里面塑料塑封破损，那是影响使用的」「**小支本身就没有塑封**，刮码刮的外包装，**根本不会动凝胶和塑料塑封包装**」「质量哪有问题」"], "question": "买家揪着\"里面也被拆过\"要退货补运费，你怎么逐条反驳？", "analysis": "**✅ 标准应对**（本案例）\n- 为什么对：① **逐条用产品结构事实反驳**——\"外包装刮码、小支本身无塑封、内层塑封完好不影响使用\"；② 把\"被拆过\"的指控拆解为\"这是刮码工艺，不是质量问题\"；③ 不接\"补运费\"。整段是\"用产品知识硬扛话术\"的范本。\n\n**💡 AI 优化建议**（把产品结构固化成三句，员工照背不漏点）\n> 「①外盒刮码是品牌方控价、所有货都这样；②**小支本身就没有塑封**，不是被拆；③最里层凝胶/塑封是完好的，**不影响使用就是正品**，质量您放心。」\n> → 把零散反驳固化成\"外盒 / 小支 / 内层\"三句式，新人也能照背逐条回。", "rubric": [{"desc": "是否用产品结构事实逐条反驳", "points": 4, "redline": false}, {"desc": "是否区分\"刮码工艺\"与\"质量问题\"", "points": 3, "redline": false}, {"desc": "是否拒绝承担运费", "points": 2, "redline": false}, {"desc": "话术是否专业可信", "points": 1, "redline": false}], "maxScore": 10}, {"num": 12, "category": "没效果/不需要（自身原因）要退", "title": "涂上没效果，威胁找平台", "caseType": "优秀", "dialogue": ["买家 汪小容dwz：「我现在买的东西药效不行……你家的产品涂上没有效果」「你退不退，随便你，我找平台，把之前买的和现在买的都发给平台」", "客服 凯凯：「我们老连接卖了这么多，从来没有客户说过不是正品」「没有什么产品您涂抹上去就能立马好的哈，**都是需要坚持使用的**」「我们这边也是有资质证明是正品的哈」「并且咱们的产品是有防伪码的，支持扫码验证真伪哈」", "系统记录：「该件退回来已经拆封使用过，完全影响二次销售，有拆箱视频和产品质检报告」"], "question": "买家说\"没效果\"还威胁找平台，且产品已拆封用过，你怎么守住？", "analysis": "**✅ 标准应对**（本案例）\n- 为什么对：① \"没效果\"用**\"需坚持使用+正品资质+防伪码可验\"**三层依据回应，不认\"没效果=质量问题\"；② 面对\"找平台\"威胁不软退；③ 保留了**拆箱视频+质检报告**作为证据链（先留证再处理）。自身原因+已拆封，硬扛到底。\n\n**💡 AI 优化建议**（三层依据固定 + 主动亮证据让威胁失效）\n> 「这类是**需要坚持使用**的，不是涂上立马见效；我们**有正品资质、有防伪码可扫验真伪**。您要走平台完全可以，**我们这边有拆箱视频和质检报告**，配合核实就行。」\n> → 把\"需坚持+资质+防伪\"讲成固定三层，并**主动亮证据链**，让\"找平台\"的威胁自动失效。", "rubric": [{"desc": "是否用\"需坚持使用+正品资质\"回应\"没效果\"", "points": 3, "redline": false}, {"desc": "是否未被\"找平台\"威胁吓软", "points": 3, "redline": false}, {"desc": "是否保留拆箱视频/质检报告证据链", "points": 2, "redline": false}, {"desc": "是否守住\"已拆封不退\"", "points": 2, "redline": false}], "maxScore": 10}, {"num": 13, "category": "没效果/不需要", "title": "投诉威胁下，全退砍成补偿留货", "caseType": "优秀", "dialogue": ["买家 久久在耶：「我要投诉」「我投诉就是了」「那我退货啊」「退五十」", "客服 奇奇：「仅退款是没有办法退的亲」「这边可以给您退三十」「这成本都不够亲」「我们这边最多跟您退三十，不然真就亏钱了」「这东西确实是正品的」", "买家：「三十就三十」「赶紧退」「我跟你好评」「你再返20给我」", "客服 奇奇：「不用了亲」「这边已经是亏钱状态了」"], "question": "买家威胁投诉、要退50，还想好评换返现，你怎么把损失压到最低？", "analysis": "**✅ 标准应对**（本案例）\n- 为什么对：① \"仅退款没法退\"先封死最坏结果；② 全退/退50**砍成部分退30**，并用\"成本不够/亏钱\"做锚；③ 买家最后想\"好评换返20\"，客服**果断拒绝\"不用了，已经亏钱\"**——没有为了一个好评再倒贴。守底线守得干净。\n\n**💡 AI 优化建议**（阶梯报价守上限，可直接当模板）\n> 「仅退款这边确实没法做哦。这样，**留着别退，补您 20**；（不行再加）我跟领导申请**最多 30，真不能再多了，成本都不够**。」好评返现一律：「不用啦亲，已经亏钱了。」\n> → 原话已是范本，AI 版本把\"20→30 阶梯、守上限、拒二次让步\"写死，新人照模板执行。", "rubric": [{"desc": "是否封死\"仅退款\"", "points": 2, "redline": false}, {"desc": "是否把全退砍成部分退", "points": 3, "redline": false}, {"desc": "是否用\"成本/亏钱\"做议价锚点", "points": 2, "redline": false}, {"desc": "是否拒绝\"好评返现\"二次让步", "points": 3, "redline": false}], "maxScore": 10}, {"num": 14, "category": "物流催发/发货慢", "title": "反复催发货，客服已读不回致投诉", "caseType": "反面", "dialogue": ["买家 tb932143705：「还没发货？」「？？？？？」「什么时候发？」「在吧？」「货什么时候发？？？」「说话啊」（多条无回复）", "客服 悦悦（隔天才回）：「年后没库存了，采货还没到，暂时发不了了亲」", "买家：「那怎么这么多天了你不告诉我呢」「你怎么能这样的服务呢」「你这服务我也是佩服的五体投地」", "客服 悦悦：「这边给您仅退款吧，亲亲」", "买家最后：「无论什么情况要与客户及时沟通，问你多少次了就是不说话」"], "question": "缺货发不出，买家连续催了好几天，你该在什么时候、怎么回？", "analysis": "**❌ 错误应对**（本案例）\n**已读不回是最大的错**——买家连催数天没人理，等到摊牌时只能\"仅退款\"了事，还白白挨了\"服务佩服得五体投地\"的差评。缺货/延迟发货，应**第一时间主动告知缺货原因+预计到货时间**，给补偿或选择权（等货/退款），把矛盾消灭在前面，而不是拖到买家爆发。\n\n**✅ 对照标准**（参考本店对延迟的处理思路）：主动说明\"过年期间退货时效有延长 / 初八开工\"，提前给预期，买家情绪就稳得住。\n\n**💡 AI 优化建议**（缺货第一时间就该这么说）\n> 「亲实在抱歉，这款年后**暂时缺货、补货中**，预计 X 天到。给您两个选择：① 等货我**优先帮您发 + 补 X 元**；② 不想等我**马上给您退**。给您添麻烦了。」\n> → 把\"隔天才回 + 被动仅退款\"换成\"第一时间主动告知 + 给选择权\"，把差评消灭在萌芽。", "rubric": [{"desc": "是否第一时间回复、杜绝已读不回", "points": 4, "redline": false}, {"desc": "是否主动告知缺货原因+到货预期", "points": 3, "redline": false}, {"desc": "是否给\"等货/退款\"选择权而非被动退款", "points": 2, "redline": false}, {"desc": "是否避免激化到差评", "points": 1, "redline": false}], "maxScore": 10}, {"num": 15, "category": "物流催发", "title": "问发货日期时与买家对骂", "caseType": "反面", "dialogue": ["买家 tb7333490372：「日期是多会的」「今天发吗」「最新是几月的」", "客服 琳琳：「月份不清楚亲」「根据订单看仓库安排亲亲」", "买家：「问你啥也不知道，当的啥客服」「问你几月的也不知道，傻子吗」「你傻子」", "客服 琳琳：「抱歉哈，这边会根据订单顺序安排的」「不方便亲，假期仓库人少」"], "question": "买家反复问日期、出口骂人，你怎么应对才不掉进对骂陷阱？", "analysis": "**✅/❌ 混合点评**（本案例）\n客服**没有跟着对骂**（这点对，守住了情绪底线），但**\"月份不清楚/不知道\"重复太多次**，等于把\"客服啥也不知道\"的把柄递到买家手里，激化了情绪。正确做法：日期类问题应给**确定性答复**（\"日期新鲜，本批为X月，今日按订单顺序发出\"），把\"不知道\"换成\"我帮您核实\"，避免反复\"不清楚\"火上浇油。\n\n**💡 AI 优化建议**（用确定性答复替代\"不知道\"）\n> 「亲，**日期很新鲜，这批是 X 月的**；今天的单按仓库顺序发出，**我帮您催一下、优先安排**。」\n> → 反面里反复\"不清楚\"火上浇油，AI 版本给确定日期 + 承诺催单，不把\"啥也不知道\"的把柄递给买家。", "rubric": [{"desc": "是否始终不跟买家对骂", "points": 4, "redline": false}, {"desc": "是否避免反复\"不知道/不清楚\"激化情绪", "points": 3, "redline": false}, {"desc": "是否对日期给出确定性答复或承诺核实", "points": 3, "redline": false}], "maxScore": 10}, {"num": 16, "category": "投诉/差评/找平台威胁", "title": "拿\"卫生问题+天天投诉\"逼仅退款", "caseType": "反面", "dialogue": ["买家 t_1503385733328_0555：「现在给我退」「我真受够了」「太烦人了」「天天平台打电话」「要不要天天投诉你们啊」「我要不要说这么严重的卫生问题」", "客服 胜军：「我这边给仓库那边反馈一下」「亲我这边只是客服 如果仅退款我这边需要给仓库那边反馈，要不这个费用是需要我出的，希望理解」", "买家：「退款」「退款」「退款」", "客服 胜军：「申请吧」「嗯」"], "question": "买家用\"卫生问题+天天投诉\"连环施压逼你仅退款，你怎么应对？", "analysis": "**❌ 错误应对**（本案例）\n两个问题：① **被\"投诉/卫生问题\"话术唬住，最终软退仅退款**；② 客服说\"我只是客服，仅退款的费用是需要我出的，希望理解\"——这是**向买家暴露内部成本结构/内部分摊机制**，等于自曝把柄，反而坐实了买家\"你怕了\"的判断。正确做法：先要证据核实\"卫生问题\"是否属实，威胁不等于让步理由，不轻易给仅退款，更不能跟买家讲内部\"谁出这笔钱\"。\n\n**💡 AI 优化建议**（要证据 + 死守不暴露内部）\n> 「卫生问题我们很重视，**您方便拍张照/视频我看下吗**？核实后该处理一定处理。」**绝不说**\"我只是客服\"\"费用要我出\"这类内部话。威胁投诉 ≠ 直接仅退款。\n> → 反面里既软退又自曝成本分摊（双错），AI 版本先要证据、稳立场，并死守不暴露内部（见红线一 / [[防泄露内部把柄红线清单]]）。", "rubric": [{"desc": "是否要求买家提供\"卫生问题\"证据再处理", "points": 3, "redline": false}, {"desc": "是否顶住\"投诉威胁\"不轻易仅退款", "points": 3, "redline": false}, {"desc": "是否**绝不向买家暴露内部成本/分摊机制**", "points": 4, "redline": true}], "maxScore": 10}, {"num": 17, "category": "改地址/收货问题", "title": "运输中要求改地址", "caseType": "反面", "dialogue": ["买家 依稀的背影36：「我这地址没改到嘛」", "客服 珂珂：「您好，核实到您的订单**正在运输中，抱歉无法为您修改地址**了，若你发现地址有误，可申请退款后填写正确的地址重新下单。」「您可以点击申请售后」"], "question": "货已在运输途中，买家要改地址，你怎么回？", "analysis": "**✅ 标准应对**（本案例 · 话术本身规范）\n- 为什么对：① 明确告知\"运输中无法改址\"的客观限制；② 给出可执行替代方案\"退款后填正确地址重拍\"。话术标准、有出路。\n- **可改进点**：这本质是\"没收到货/地址改晚了\"型纠纷，归到反面案例是因为前期**未在可改址窗口期及时处理**导致只能退款重拍，流失体验。考核重点在\"地址类问题要在发货前抓紧处理\"。\n\n**💡 AI 优化建议**（话术已规范，重在前置拦截）\n> 话术保持：「运输中无法改址，可**退款后填正确地址重拍**，我帮您盯着重新安排。」**更关键**：地址类问题要在**发货前的可改窗口**就处理掉——看到\"地址有误\"留言应第一时间在发货前改，而不是拖到运输中。\n> → 原话没问题，AI 重点是把处理时机提前到发货前，从源头避免退款重拍的体验流失。", "rubric": [{"desc": "是否说明\"运输中无法改址\"的客观限制", "points": 3, "redline": false}, {"desc": "是否给出\"退款重拍\"可执行方案", "points": 3, "redline": false}, {"desc": "是否意识到应在发货前及时处理改址", "points": 2, "redline": false}, {"desc": "话术是否清晰有礼", "points": 2, "redline": false}], "maxScore": 10}, {"num": 18, "category": "快过期/旧日期", "title": "已拆封发现快过期，5元补偿换留货", "caseType": "优秀", "dialogue": ["买家 t_1504590566611_0209：「都快过期了」「模拆了还可以退吗」「打开了，但没用，才发现快过期了」", "客服 涵涵：「亲，都是这个日期哦」「亲，实在是抱歉，您看这边**补偿您5元**，您看可以吗？」→「您看这边补偿您5元，您留下可以吗？」", "买家：「好吧」（接受）"], "question": "买家拆开后说\"快过期\"要退，你怎么处理既不全退又留住货？", "analysis": "**✅ 标准应对**（本案例）\n- 为什么对：① \"都是这个日期\"统一口径，说明非个例；② 抓住\"已打开（已拆封）\"的事实；③ **用5元小额补偿换\"留货不退\"**，把一单可能的全退/退货压成5元成本。小额补偿换留货的标准操作。\n\n**💡 AI 优化建议**（统一口径 + 阶梯补偿守上限）\n> 「亲，**所有货都是这个批次日期哦**，在保质期内正常使用没问题。您已经拆开了，这样**补您 5 元留着用**好吗？（实在不行）最多补到 X 元。」\n> → 原话已是范本，AI 版本补\"在保质期内\"打消顾虑 + 阶梯补偿守上限，模板化可复用（呼应 [[缺货标准话术卡]] 补偿封顶）。", "rubric": [{"desc": "是否用\"统一日期\"口径回应快过期质疑", "points": 3, "redline": false}, {"desc": "是否抓住\"已拆封\"事实", "points": 2, "redline": false}, {"desc": "是否用小额补偿换留货、避免全退", "points": 4, "redline": false}, {"desc": "沟通是否简洁有效", "points": 1, "redline": false}], "maxScore": 10}];
+
+const LS='kefu_exam_state';
+let st=null;
+
+function newState(){return{name:'',gonghao:'',cur:0,answers:{},scores:{},checks:{},submitted:{},done:false,ts:Date.now()};}
+function save(){if(st)localStorage.setItem(LS,JSON.stringify(st));}
+function load(){try{return JSON.parse(localStorage.getItem(LS));}catch(e){return null;}}
+
+document.getElementById('qcount').textContent=QUESTIONS.length;
+document.getElementById('qmax').textContent=QUESTIONS.reduce((s,q)=>s+q.maxScore,0);
+window.addEventListener('load',()=>{
+  const prev=load();
+  if(prev&&!prev.done&&Object.keys(prev.answers).length>0){
+    document.getElementById('resumeBox').classList.remove('hide');
+  }
+});
+
+function start(){
+  const name=document.getElementById('name').value.trim();
+  if(!name){alert('请先填写姓名');return;}
+  st=newState();
+  st.name=name;
+  st.gonghao=document.getElementById('gonghao').value.trim();
+  save();
+  show('exam');renderQ();
+}
+function resume(){
+  st=load();
+  if(!st){alert('没有可恢复的进度');return;}
+  show('exam');renderQ();
+}
+function show(id){
+  ['start','exam','result'].forEach(s=>document.getElementById(s).classList.add('hide'));
+  document.getElementById(id).classList.remove('hide');
+  window.scrollTo(0,0);
+}
+
+// 迷你 markdown → html
+function md(t){
+  if(!t)return'';
+  let lines=t.split('\n'),html='',inList=false;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const inline=s=>esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  for(let raw of lines){
+    let l=raw.trim();
+    if(!l){if(inList){html+='</ul>';inList=false;}continue;}
+    if(l.startsWith('&gt;')||l.startsWith('>')){
+      l=l.replace(/^(&gt;|>)\s?/,'');
+      if(inList){html+='</ul>';inList=false;}
+      html+='<blockquote>'+inline(l)+'</blockquote>';
+    }else if(l.startsWith('- ')){
+      if(!inList){html+='<ul>';inList=true;}
+      html+='<li>'+inline(l.slice(2))+'</li>';
+    }else{
+      if(inList){html+='</ul>';inList=false;}
+      html+='<p>'+inline(l)+'</p>';
+    }
+  }
+  if(inList)html+='</ul>';
+  return html;
+}
+
+function roleOf(line){
+  // 取「：」前的说话人判断角色
+  const head=line.split('：')[0]||'';
+  if(head.indexOf('客服')>=0)return'staff';
+  if(head.indexOf('买家')>=0)return'buyer';
+  return head.indexOf('店铺')>=0?'staff':'buyer';
+}
+function speaker(line){return (line.split('：')[0]||'').replace(/（.*?）/g,'').trim();}
+function content(line){const i=line.indexOf('：');return i<0?line:line.slice(i+1);}
+function fmtBub(s){return escapeHtml(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');}
+
+function renderQ(){
+  const i=st.cur, q=QUESTIONS[i], n=QUESTIONS.length;
+  document.getElementById('progText').textContent=`第 ${i+1} / ${n} 题　·　${st.name}`;
+  document.getElementById('progBar').style.width=((i)/n*100)+'%';
+  const submitted=!!st.submitted[i];
+
+  let chat='';
+  q.dialogue.forEach(line=>{
+    const r=roleOf(line);
+    chat+=`<div class="msg ${r}"><span class="who">${escapeHtml(speaker(line))}</span><span class="bub">${fmtBub(content(line))}</span></div>`;
+  });
+
+  let html=`
+    <span class="tag">${escapeHtml(q.category)}</span>
+    <span class="tag ${q.caseType==='反面'?'neg':'pos'}">${q.caseType||''}案例</span>
+    <h2>${escapeHtml(q.title)}</h2>
+    <div class="chat">${chat}</div>
+    <div class="qask">❓ ${escapeHtml(q.question)}</div>
+    <label>✍️ 你的回复（用自己的话写出怎么应对）</label>
+    <textarea id="ans" placeholder="在这里写下你会怎么回复买家...">${st.answers[i]?escapeHtml(st.answers[i]):''}</textarea>
+  `;
+
+  if(!submitted){
+    html+=`<div style="margin-top:14px"><button class="btn block" onclick="submitAns()">提交并查看参考答案 ↓</button></div>`;
+  }else{
+    html+=`
+      <div class="analysis"><div style="font-weight:700;color:var(--ok);margin:8px 0">✅ 参考解析（标准应对 + AI 优化）</div>${md(q.analysis)}</div>
+      <h2 style="margin-top:18px">📊 对照评分要点，诚实自评</h2>
+      <p class="muted">你的回复做到了哪几条？点击勾选，做到才得分。</p>
+      <div class="rubric" id="rubric">${q.rubric.map((r,ri)=>{
+        const on=st.checks[i]&&st.checks[i][ri];
+        return `<div class="ritem ${on?'on':''} ${r.redline?'redline':''}" onclick="toggle(${ri})">
+          <div class="box">${on?'✓':''}</div>
+          <div class="rt">${escapeHtml(r.desc)}${r.redline?' <span style="color:var(--bad)">·红线项</span>':''}</div>
+          <div class="pt">${r.points}分</div></div>`;
+      }).join('')}</div>
+      <div class="scoreline">本题得分：<span id="qscore">${calcQ(i)}</span> / ${q.maxScore}</div>
+      <div class="row" style="margin-top:14px">
+        ${i>0?'<button class="btn ghost" onclick="prev()">← 上一题</button>':''}
+        <button class="btn" onclick="next()">${i===n-1?'交卷看成绩 🏁':'下一题 →'}</button>
+      </div>
+    `;
+  }
+  document.getElementById('qbody').innerHTML=html;
+  const ta=document.getElementById('ans');
+  if(ta)ta.addEventListener('input',e=>{st.answers[i]=e.target.value;save();});
+}
+
+function submitAns(){
+  const ta=document.getElementById('ans');
+  if(!ta.value.trim()){if(!confirm('还没写回复，确定直接看答案吗？（建议先写再看）'))return;}
+  st.answers[st.cur]=ta.value;
+  st.submitted[st.cur]=true;
+  if(!st.checks[st.cur])st.checks[st.cur]={};
+  save();renderQ();
+}
+function toggle(ri){
+  const i=st.cur;
+  if(!st.checks[i])st.checks[i]={};
+  st.checks[i][ri]=!st.checks[i][ri];
+  st.scores[i]=calcQ(i);
+  save();
+  document.querySelectorAll('#rubric .ritem')[ri].classList.toggle('on');
+  document.querySelectorAll('#rubric .ritem')[ri].querySelector('.box').textContent=st.checks[i][ri]?'✓':'';
+  document.getElementById('qscore').textContent=calcQ(i);
+}
+function calcQ(i){
+  const q=QUESTIONS[i];let s=0;
+  if(st.checks[i])q.rubric.forEach((r,ri)=>{if(st.checks[i][ri])s+=r.points;});
+  return s;
+}
+function prev(){if(st.cur>0){st.cur--;save();renderQ();}}
+function next(){
+  st.scores[st.cur]=calcQ(st.cur);
+  if(st.cur<QUESTIONS.length-1){st.cur++;save();renderQ();}
+  else{finish();}
+}
+
+function finish(){
+  st.done=true;
+  QUESTIONS.forEach((q,i)=>{st.scores[i]=calcQ(i);});
+  save();
+  const total=QUESTIONS.reduce((s,q,i)=>s+(st.scores[i]||0),0);
+  const max=QUESTIONS.reduce((s,q)=>s+q.maxScore,0);
+  const pct=Math.round(total/max*100);
+  let grade,cls;
+  if(pct>=90){grade='优秀 🏆';cls='g-ex';}
+  else if(pct>=75){grade='良好 👍';cls='g-good';}
+  else if(pct>=60){grade='合格 ✔';cls='g-pass';}
+  else{grade='不合格 ❌';cls='g-fail';}
+
+  let rows='';
+  QUESTIONS.forEach((q,i)=>{
+    const sc=st.scores[i]||0;
+    rows+=`<tr class="${sc<q.maxScore*0.6?'low':''}"><td>${i+1}. ${escapeHtml(q.category)}</td><td class="s">${sc}/${q.maxScore}</td></tr>`;
+  });
+  const weak=QUESTIONS.map((q,i)=>({q,i,sc:st.scores[i]||0})).filter(x=>x.sc<x.q.maxScore*0.6);
+
+  const dt=new Date();
+  const dstr=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')} ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+
+  document.getElementById('result').innerHTML=`
+    <div class="center">
+      <p class="muted" style="margin:0">${escapeHtml(st.name)}${st.gonghao?' · '+escapeHtml(st.gonghao):''} 的考核成绩</p>
+      <div class="big">${total}<span style="font-size:22px;color:var(--sub)"> / ${max}</span></div>
+      <div style="margin:6px 0 4px"><span class="grade ${cls}">${grade}</span></div>
+      <p class="muted">得分率 ${pct}%　·　${dstr}</p>
+    </div>
+    <div class="note">⚠️ 注意：触碰<b>致命红线</b>（泄露内部把柄 / 与买家对骂 / 钱货两空）在真实考核中是<b>一票否决判 0 分</b>。本系统为自评，红线项请务必如实勾选。</div>
+    <h2 style="margin-top:16px">各题得分</h2>
+    <table><tr><th>题目</th><th class="s">得分</th></tr>${rows}</table>
+    ${weak.length?`<h2 style="margin-top:16px">⚠️ 薄弱题（建议重做）</h2><ul>${weak.map(x=>`<li>第${x.i+1}题 ${escapeHtml(x.q.category)} — ${escapeHtml(x.q.title)}（${x.sc}/${x.q.maxScore}）</li>`).join('')}</ul>`:'<p style="color:var(--ok);font-weight:600;margin-top:14px">🎉 没有薄弱题，守损意识到位！</p>'}
+    <div class="row" style="margin-top:18px">
+      <button class="btn" onclick="copyReport(${total},${max},${pct},'${grade}','${dstr}')">📋 复制成绩单发主管</button>
+      <button class="btn ghost" onclick="review()">📖 回看错题</button>
+    </div>
+    <div style="margin-top:10px"><button class="btn ghost block" onclick="restart()">重新考核</button></div>
+  `;
+  document.getElementById('progBar').style.width='100%';
+  show('result');
+}
+
+function copyReport(total,max,pct,grade,dstr){
+  let t=`【客服接待考核成绩】\n姓名：${st.name}${st.gonghao?'\n工号/店铺：'+st.gonghao:''}\n时间：${dstr}\n总分：${total}/${max}（${pct}%）\n评级：${grade}\n\n各题得分：\n`;
+  QUESTIONS.forEach((q,i)=>{t+=`${i+1}. ${q.category} ${st.scores[i]||0}/${q.maxScore}\n`;});
+  const weak=QUESTIONS.map((q,i)=>({q,i,sc:st.scores[i]||0})).filter(x=>x.sc<x.q.maxScore*0.6);
+  if(weak.length)t+=`\n薄弱题：${weak.map(x=>'第'+(x.i+1)+'题').join('、')}`;
+  navigator.clipboard.writeText(t).then(()=>alert('成绩单已复制，粘贴发给主管即可！')).catch(()=>{
+    prompt('复制下面文本发给主管：',t);
+  });
+}
+function review(){st.cur=0;st.done=false;
+  // 跳到第一道薄弱题，没有则第一题
+  const weak=QUESTIONS.findIndex((q,i)=>(st.scores[i]||0)<q.maxScore*0.6);
+  st.cur=weak>=0?weak:0;save();show('exam');renderQ();}
+function restart(){if(confirm('确定重新开始？当前成绩会清空。')){localStorage.removeItem(LS);location.reload();}}
+
+function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+</script>
+</body>
+</html>

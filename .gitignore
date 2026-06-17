@@ -1,0 +1,6 @@
+# 含真实店铺名，绝不公开
+shoplist.json
+# 内部规划/日志
+tasks/
+# browse工具缓存
+.gstack/
